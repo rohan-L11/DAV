@@ -1,0 +1,80 @@
+library(tm)
+library(wordcloud)
+library(SnowballC)
+library(RColorBrewer)
+
+documents <- c(
+"Data Science is an interdisciplinary field that uses scientific methods",
+"Machine Learning is a branch of Artificial Intelligence",
+"Data Analytics helps organizations make informed decisions",
+"Artificial Intelligence enables smart applications",
+"Data Science and Machine Learning are widely used in business"
+)
+
+corpus <- Corpus(VectorSource(documents))
+
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, stemDocument)
+
+dtm <- DocumentTermMatrix(corpus)
+
+matrix <- as.matrix(dtm)
+
+word_freq <- sort(
+  colSums(matrix),
+  decreasing=TRUE
+)
+
+freq_df <- data.frame(
+  Word=names(word_freq),
+  Frequency=word_freq
+)
+
+print(freq_df)
+
+dtm_tfidf <- weightTfIdf(dtm)
+
+tfidf_matrix <- as.matrix(dtm_tfidf)
+
+tfidf_scores <- sort(
+  colSums(tfidf_matrix),
+  decreasing=TRUE
+)
+
+tfidf_df <- data.frame(
+  Word=names(tfidf_scores),
+  Score=tfidf_scores
+)
+
+print(head(tfidf_df,10))
+
+wordcloud(
+  words=freq_df$Word,
+  freq=freq_df$Frequency,
+  min.freq=1,
+  max.words=100,
+  random.order=FALSE,
+  rot.per=0.35,
+  colors=brewer.pal(8,"Dark2")
+)
+
+png(
+  "WordCloud.png",
+  width=800,
+  height=600
+)
+
+wordcloud(
+  words=freq_df$Word,
+  freq=freq_df$Frequency,
+  min.freq=1,
+  max.words=100,
+  random.order=FALSE,
+  colors=brewer.pal(8,"Dark2")
+)
+
+dev.off()

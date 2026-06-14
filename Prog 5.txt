@@ -1,0 +1,84 @@
+library(recommenderlab)
+
+data(MovieLense)
+
+ratings_movies <- MovieLense[
+  rowCounts(MovieLense) > 50,
+  colCounts(MovieLense) > 100
+]
+
+set.seed(123)
+
+train_test <- evaluationScheme(
+  ratings_movies,
+  method="split",
+  train=0.8,
+  given=10,
+  goodRating=4
+)
+
+train <- getData(train_test,"train")
+test <- getData(train_test,"known")
+
+rec_model <- Recommender(
+  train,
+  method="UBCF",
+  parameter=list(
+    method="Cosine",
+    nn=30
+  )
+)
+
+recommendations <- predict(
+  rec_model,
+  test,
+  n=5
+)
+
+as(recommendations,"list")[1]
+
+predicted_ratings <- predict(
+  rec_model,
+  getData(train_test,"known"),
+  type="ratings"
+)
+
+actual_ratings <- getData(train_test,"unknown")
+
+rmse_value <- calcPredictionAccuracy(
+  predicted_ratings,
+  actual_ratings
+)["RMSE"]
+
+mae_value <- calcPredictionAccuracy(
+  predicted_ratings,
+  actual_ratings
+)["MAE"]
+
+results <- evaluate(
+  train_test,
+  method="UBCF",
+  type="topNList",
+  n=c(1,3,5,10)
+)
+
+avg_results <- avg(results)
+
+plot(avg_results)
+
+rec_list <- as(recommendations,"list")
+
+rec_df <- data.frame(
+  User=1:length(rec_list),
+  Recommendations=sapply(
+    rec_list,
+    paste,
+    collapse=", "
+  )
+)
+
+write.csv(
+  rec_df,
+  "Recommendations.csv",
+  row.names=FALSE
+)

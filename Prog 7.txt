@@ -1,0 +1,59 @@
+library(sf)
+library(ggplot2)
+library(rnaturalearth)
+library(dplyr)
+library(leaflet)
+
+world <- ne_countries(
+  scale="medium",
+  returnclass="sf"
+)
+
+gdp_data <- data.frame(
+  name=c(
+    "India",
+    "United States of America",
+    "China",
+    "Brazil",
+    "Australia"
+  ),
+  GDP=c(3.7,27.0,18.5,2.1,1.8)
+)
+
+world_gdp <- world %>%
+  left_join(gdp_data, by="name")
+
+ggplot(world_gdp) +
+  geom_sf(aes(fill=GDP)) +
+  scale_fill_viridis_c(
+    option="plasma",
+    na.value="lightgrey"
+  ) +
+  labs(
+    title="World GDP Distribution",
+    fill="GDP"
+  ) +
+  theme_minimal()
+
+leaflet(world_gdp) %>%
+  addTiles() %>%
+  addPolygons(
+    fillColor=~colorNumeric(
+      "YlOrRd",
+      GDP
+    )(GDP),
+    fillOpacity=0.7,
+    color="black",
+    weight=1,
+    popup=~paste(
+      name,
+      "<br>GDP:",
+      GDP
+    )
+  )
+
+ggsave(
+  "World_GDP_Map.png",
+  width=10,
+  height=6
+)

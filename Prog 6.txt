@@ -1,0 +1,78 @@
+library(forecast)
+library(tseries)
+library(Metrics)
+
+data("AirPassengers")
+
+ts_data <- AirPassengers
+
+plot(ts_data,
+     main="Air Passengers Time Series",
+     ylab="Passengers",
+     xlab="Year")
+
+n <- length(ts_data)
+
+train_size <- floor(0.8*n)
+
+train <- window(
+  ts_data,
+  end=time(ts_data)[train_size]
+)
+
+test <- window(
+  ts_data,
+  start=time(ts_data)[train_size+1]
+)
+
+summary(ts_data)
+
+adf_result <- adf.test(ts_data)
+
+diff_data <- diff(ts_data)
+
+plot(diff_data,
+     main="Differenced Time Series")
+
+model <- auto.arima(train)
+
+summary(model)
+
+forecast_values <- forecast(
+  model,
+  h=length(test)
+)
+
+plot(forecast_values,
+     main="ARIMA Forecast")
+
+lines(test,col="red")
+
+legend(
+  "topleft",
+  legend=c("Forecast","Actual"),
+  col=c("blue","red"),
+  lty=1
+)
+
+pred <- as.numeric(forecast_values$mean)
+actual <- as.numeric(test)
+
+mae_value <- mae(actual,pred)
+
+rmse_value <- rmse(actual,pred)
+
+mape_value <- mean(
+  abs((actual-pred)/actual)
+)*100
+
+results <- data.frame(
+  Actual=actual,
+  Predicted=pred
+)
+
+write.csv(
+  results,
+  "ARIMA_Predictions.csv",
+  row.names=FALSE
+)

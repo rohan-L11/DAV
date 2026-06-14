@@ -1,0 +1,49 @@
+library(arules)
+library(arulesViz)
+
+data("Groceries")
+
+summary(Groceries)
+
+itemFrequencyPlot(Groceries,
+                  topN=10,
+                  type="absolute")
+
+rules <- apriori(
+  Groceries,
+  parameter=list(
+    support=0.01,
+    confidence=0.5,
+    minlen=2
+  )
+)
+
+summary(rules)
+
+strong_rules <- sort(rules,
+                     by="lift",
+                     decreasing=TRUE)
+
+inspect(strong_rules[1:10])
+
+quality(strong_rules)[1:10,]
+
+plot(strong_rules,
+     method="scatterplot",
+     measure=c("support","confidence"),
+     shading="lift")
+
+plot(strong_rules[1:10],
+     method="graph",
+     engine="htmlwidget")
+
+plot(head(strong_rules,20),
+     method="grouped")
+
+write(
+  strong_rules,
+  file="association_rules.csv",
+  sep=",",
+  quote=TRUE,
+  row.names=FALSE
+)
