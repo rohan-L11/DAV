@@ -1,0 +1,30 @@
+data <- read.csv("https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv")
+
+summary(data)
+
+data$Age[is.na(data$Age)] <- median(data$Age, na.rm=TRUE)
+
+data$Embarked[is.na(data$Embarked)] <- names(sort(table(data$Embarked), decreasing=TRUE))[1]
+
+data$Cabin <- NULL
+
+boxplot(data$Fare)
+
+Q1 <- quantile(data$Fare,0.25)
+Q3 <- quantile(data$Fare,0.75)
+IQR <- Q3-Q1
+
+data <- data[
+  data$Fare >= Q1-1.5*IQR &
+  data$Fare <= Q3+1.5*IQR,
+]
+
+data$Survived <- as.factor(data$Survived)
+data$Sex <- as.factor(data$Sex)
+data$Pclass <- as.factor(data$Pclass)
+
+data <- unique(data)
+
+write.csv(data,"cleaned_dataset.csv",row.names=FALSE)
+
+head(data)

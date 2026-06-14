@@ -1,0 +1,39 @@
+library(ggplot2)
+library(tidyr)
+library(reshape2)
+
+data <- iris
+
+features <- data[, c("Sepal.Length","Sepal.Width","Petal.Length","Petal.Width")]
+
+scaled_features <- scale(features)
+
+pca_result <- prcomp(scaled_features, center=FALSE, scale.=FALSE)
+
+pca_df <- as.data.frame(pca_result$x[,1:2])
+colnames(pca_df) <- c("PCA1","PCA2")
+
+ggplot(data, aes(x=Sepal.Length)) +
+  geom_histogram(bins=10, fill="steelblue", color="white")
+
+ggplot(pca_df, aes(x=PCA1, y=PCA2)) +
+  geom_point(color="steelblue")
+
+pca_long <- pivot_longer(pca_df,
+                         cols=everything(),
+                         names_to="Component",
+                         values_to="Value")
+
+ggplot(pca_long, aes(x=Component, y=Value, fill=Component)) +
+  geom_boxplot()
+
+cor_matrix <- cor(features)
+
+cor_melted <- melt(cor_matrix)
+
+ggplot(cor_melted,
+       aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile() +
+  geom_text(aes(label=round(value,2)))
+
+write.csv(pca_df,"iris_pca_reduced.csv",row.names=FALSE)

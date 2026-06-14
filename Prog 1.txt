@@ -1,0 +1,23 @@
+library(rvest)
+
+q <- a <- t <- c()
+
+for(i in 1:5){
+  url  <- paste0("https://quotes.toscrape.com/page/", i, "/")
+  page <- read_html(url)
+  
+  for(node in html_elements(page,"div.quote")){
+    q <- c(q, html_text(html_element(node,"span.text")))
+    a <- c(a, html_text(html_element(node,"small.author")))
+    t <- c(t, paste(html_text(html_elements(node,"a.tag")), collapse=", "))
+  }
+}
+
+data <- data.frame(Quote=q, Author=a, Tags=t)
+
+cat("\nFirst 5 Rows:\n")
+print(head(data, 5))
+
+write.csv(data,"quotes_dataset.csv",row.names=FALSE)
+
+head(data)
